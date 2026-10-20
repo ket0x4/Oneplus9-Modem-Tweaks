@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Fully Unlocked Universal Carrier Policy:
+  Unlocks 100% hardware bands, full native CA/EN-DC combos, and unconditional 5G SA/NSA.
+-->
+<policy
+    name="Universal_Unlocked"
+    changelist="$Change: 20261020 $"
+    policy_ver="999.9.9"
+>
+  <initial>
+
+    <!-- Enable all Radio Access Technologies -->
+    <rat_capability_if base="none">
+      <include> C H G W L 5G </include>
+    </rat_capability_if>
+
+    <!-- Force full hardware RF and RAT capabilities -->
+    <define_fullrat_config>
+      <rf_bands base="hardware" />
+      <rat_capability base="hardware" />
+    </define_fullrat_config>
+
+    <!-- Unlock 100% of modem hardware supported bands -->
+    <rf_band_list name="unlocked_all_bands">
+      <gw_bands base="hardware" />
+      <lte_bands base="hardware" />
+      <tds_bands base="hardware" />
+      <nr5g_sa_bands base="hardware" />
+      <nr5g_nsa_bands base="hardware" />
+    </rf_band_list>
+
+    <!-- Force 5G Standalone and Non-Standalone features (no dynamic disable) -->
+    <feature> nr5g_sa </feature>
+    <feature> nr5g_nsa </feature>
+
+  </initial>
+
+  <!-- Only check if device radio is online -->
+  <if>
+    <not> <phone_operating_mode> ONLINE </phone_operating_mode> </not>
+    <then>
+      <stop />
+    </then>
+  </if>
+
+  <svc_mode> FULL </svc_mode>
+
+  <!-- Unconditional rule: Apply universally to all carriers and bands -->
+  <select>
+    <case>
+      <all_of>
+        <true />
+      </all_of>
+      <actions>
+        <rat_capability base="none">
+          <include> C H G W L 5G </include>
+        </rat_capability>
+
+        <!-- Prioritize 5G first, then LTE, WCDMA, GSM -->
+        <rat_order> 5G L W G C </rat_order>
+
+        <!-- Apply complete hardware RF band list -->
+        <rf_bands list="unlocked_all_bands" />
+      </actions>
+    </case>
+  </select>
+
+</policy>
