@@ -1,27 +1,35 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
-  Fully Unlocked Universal Carrier Policy:
-  Unlocks 100% hardware bands, full native CA/EN-DC combos, and unconditional 5G SA/NSA.
+  Universal Unlocked Carrier Policy for Qualcomm Snapdragon X60 Modem
+  - Unlocks 100% of hardware RF bands (GSM, WCDMA, TD-SCDMA, LTE, 5G SA, 5G NSA)
+  - Removes all Carrier Aggregation (CA) whitelist restrictions (Full LTE-CA, EN-DC, NR-CA)
+  - Disables dynamic 5G throttling and location-based policy blocks
 -->
 <policy
-    name="Universal_Unlocked"
+    name="Universal_Full_Unlocked"
     changelist="$Change: 20261020 $"
+    schema_ver="1"
     policy_ver="999.9.9"
 >
   <initial>
 
-    <!-- Enable all Radio Access Technologies -->
+    <!-- Enable all Radio Access Technologies without restriction -->
     <rat_capability_if base="none">
-      <include> C H G W L 5G </include>
+      <include> C H G W T L 5G </include>
     </rat_capability_if>
 
     <!-- Force full hardware RF and RAT capabilities -->
     <define_fullrat_config>
-      <rf_bands base="hardware" />
-      <rat_capability base="hardware" />
+      <actions>
+        <rat_capability base="none">
+          <include> C H G W T L 5G </include>
+        </rat_capability>
+        <rf_bands base="hardware" />
+        <svc_mode> FULL </svc_mode>
+      </actions>
     </define_fullrat_config>
 
-    <!-- Unlock 100% of modem hardware supported bands -->
+    <!-- Unlock 100% of hardware-supported bands across all technologies -->
     <rf_band_list name="unlocked_all_bands">
       <gw_bands base="hardware" />
       <lte_bands base="hardware" />
@@ -30,14 +38,19 @@
       <nr5g_nsa_bands base="hardware" />
     </rf_band_list>
 
-    <!-- Force 5G Standalone and Non-Standalone features (no dynamic disable) -->
+    <!-- Apply unlocked hardware bands as the default baseline -->
+    <rf_bands_if list="unlocked_all_bands" />
+
+    <!-- Force enable 5G SA, 5G NSA, and Carrier Aggregation features -->
     <feature> nr5g_sa </feature>
     <feature> nr5g_nsa </feature>
+    <feature> nr5g_ca </feature>
+    <feature> nr5g_sa_ca </feature>
 
   </initial>
 
-  <!-- Only check if device radio is online -->
-  <if>
+  <!-- Only halt policy evaluation if the radio is offline (Airplane Mode) -->
+  <if precond="none">
     <not> <phone_operating_mode> ONLINE </phone_operating_mode> </not>
     <then>
       <stop />
@@ -46,22 +59,30 @@
 
   <svc_mode> FULL </svc_mode>
 
-  <!-- Unconditional rule: Apply universally to all carriers and bands -->
+  <!-- Unconditional universal rule: Applies to all SIM cards and all operators globally -->
   <select>
     <case>
       <all_of>
         <true />
       </all_of>
       <actions>
+        <!-- Enable all RATs simultaneously -->
         <rat_capability base="none">
-          <include> C H G W L 5G </include>
+          <include> C H G W T L 5G </include>
         </rat_capability>
 
-        <!-- Prioritize 5G first, then LTE, WCDMA, GSM -->
-        <rat_order> 5G L W G C </rat_order>
+        <!-- Prioritize 5G first, followed by LTE, WCDMA, TD-SCDMA, GSM, CDMA -->
+        <rat_order> 5G L W T G H C </rat_order>
 
-        <!-- Apply complete hardware RF band list -->
+        <!-- Bind all RF band capabilities directly to hardware limits -->
         <rf_bands list="unlocked_all_bands" />
+
+        <!--
+          NOTE: <ca_band_combos> is intentionally omitted here.
+          Omitting this tag disables Policyman combo pruning and forces the modem
+          to expose 100% of its native hardware LTE-CA, 5G NSA (EN-DC), and 5G SA (NR-CA)
+          combinations directly to the base station.
+        -->
       </actions>
     </case>
   </select>
