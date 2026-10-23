@@ -106,6 +106,13 @@ put zero.bin /nv/item_files/modem/mmode/downgrade_sa
 put zero.bin /nv/item_files/modem/mmode/downgrade_sa_Subscription01
 ```
 
+> [!NOTE]
+>  If you want your device to automatically handle transitions between 5G Standalone (SA) and Non-Standalone (NSA) modes rather than forcing a single state:
+> ```
+> put one.bin /nv/item_files/modem/mmode/downgrade_sa
+> put one.bin /nv/item_files/modem/mmode/downgrade_sa_Subscription01
+> ```
+
 #### 2. Unlock FGI & Modulation Constraints (RRC Cap)
 Resets feature group indicator restrictions to allow 256QAM DL, 64QAM UL, and broader Carrier Aggregation:
 
